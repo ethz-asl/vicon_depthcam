@@ -1,0 +1,17 @@
+<launch>
+
+    
+    <node name="rosbag_play" type="play" pkg="rosbag"
+      args=" -q /media/philipp/SANDISK/bigbags/whole_lab_big.bag -r 1">
+    </node>
+
+
+<node pkg="voxblox_ros" name="voxblox_node" type="voxblox_node" output="screen">
+<param name="tsdf_voxel_size" value="0.05" />
+<param name="color_mode" value="normals"/>
+<remap from="pointcloud" to="/points_processed"/>
+<param name="mesh_filename" value="mesh_whole_lab"/>
+    </node>
+
+  
+</launch>

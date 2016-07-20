@@ -1,0 +1,19 @@
+<launch>
+
+    
+    <node name="rosbag_play" type="play" pkg="rosbag"
+      args=" -q /media/philipp/SANDISK/flat_chair.bag -r 1">
+    </node>
+
+
+
+    <node pkg="vicon_depthcam_scan" name="pointcloud_to_global" type="pointcloud_to_global" output="screen">
+<remap from="camera/depth/points" to="/points_processed"/>
+    </node>
+
+<node pkg="vicon_depthcam_scan" name="test_extrinsic_calibration" type="test_extrinsic_calibration" output="screen">
+    </node>
+
+
+  
+</launch>

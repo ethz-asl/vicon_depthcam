@@ -1,0 +1,20 @@
+<launch>
+
+    
+    <node name="rosbag_play" type="play" pkg="rosbag"
+      args=" -q /media/philipp/SANDISK/cow/cow_gone.bag -r 0.2 --pause">
+    </node>
+
+    <node pkg="vicon_depthcam_scan" name="ircamera_tf" type="ircamera_tf" output="screen">
+    </node>
+    
+
+<node pkg="octomap_world" name="octomap_manager" type="octomap_manager" output="screen">
+<param name="resolution" value="0.5" />
+<param name="map_publish_frequency" value="0.8" />
+<param name="octomap_file" value="~/octomaps/cow_small" />
+<remap from="pointcloud" to="/points_processed"/>
+    </node>
+
+  
+</launch>

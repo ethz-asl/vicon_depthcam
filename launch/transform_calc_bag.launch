@@ -1,0 +1,34 @@
+<launch>
+
+
+    <node name="rosbag_play" type="play" pkg="rosbag"
+      args=" -q /media/philipp/SANDISK/final_calibration/chessboard.bag">
+    </node>
+
+
+   <node pkg="vicon_depthcam_scan" name="image_converter" type="image_converter">
+    </node>
+    
+    <!-- display 0: (default) not display / 1: display found corner -->
+    <param name="display" type="int" value="1"/>
+    <!-- maxboard -1: (default) infinite search board / 1<=: limit found number of boards -->
+    <param name="maxboard" type="int" value="1"/>
+    <!-- set frame_id if you want to use specific frame_id -->
+    <!-- param name="frame_id" type="string" value="stereo_link"/-->
+    <param name="rect0_size_x" type="double" value="0.07"/>
+    <param name="rect0_size_y" type="double" value="0.07"/>
+    <param name="grid0_size_x" type="int" value="6"/>
+    <param name="grid0_size_y" type="int" value="7"/>
+    <param name="type0" type="string" value="6x7chessboard"/>
+
+    <node pkg="checkerboard_detector" type="checkerboard_detector"
+          name="detector_node" respawn="false" >
+      <remap from="camera_info" to="/camera/ir/camera_info"/>
+      <remap from="image" to="/camera/ir/image_rect_conv"/>
+    </node>
+
+    <node pkg="vicon_depthcam_scan" type="transform_calc"
+          name="transform_calc_node" output="screen">
+    </node>
+
+</launch>
