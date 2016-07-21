@@ -1,0 +1,19 @@
+<launch>
+
+  <arg name="sensor_name" default="kinect"/>
+  <arg name="target_name" default="checkerboard"/>
+
+  <arg name="marker_frame" default="world" />
+
+  <include file="$(find ros_vrpn_client)/launch/asl_vicon.launch">
+    <arg name="object_name" value="$(arg sensor_name)"/>
+  </include>
+
+  <include file="$(find ros_vrpn_client)/launch/asl_vicon.launch">
+    <arg name="object_name" value="$(arg target_name)"/>
+  </include>
+
+  <node pkg="vicon_depthcam_calib" name="pointcloud_to_global" type="pointcloud_to_global">
+  </node>
+
+</launch>

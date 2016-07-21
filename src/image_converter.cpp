@@ -1,55 +1,33 @@
-#include <ros/ros.h>
-#include <image_transport/image_transport.h>
+#include "vicon_depthcam/image_converter.h"
 
-/*
- *This node converts the pseudo 16bit-IR_Image to a 8-bit picture in order to be readable for the checkerboard-detection node.
- */
-
-class Forward {
-public:
-
-	void imageCallback(const sensor_msgs::ImageConstPtr& msg) {
-
-		sensor_msgs::Image msgcopy;
-		msgcopy = *msg;
-		int factor = msgcopy.step / msgcopy.width;
-		unsigned long length = msgcopy.width * msgcopy.height;
-
-		//copy data to first part fo the array
-		for (int i = 1; i < length; i++) {
-			msgcopy.data[i] = msgcopy.data[2 * i];
-		}
-		//delete second part of the array
-		msgcopy.data.resize(length);
-		msgcopy.encoding = "mono8";
-		msgcopy.step = msgcopy.width;
-
-		pub_.publish(msgcopy);
-		ROS_INFO("Published converted image.");
-	}
-
-	Forward() {
-		image_transport::ImageTransport it(nh);
-		pub_ = it.advertise("camera/ir/image_rect_conv", 1);
-		sub_ = it.subscribe("camera/ir/image_rect_ir", 1,
-				&Forward::imageCallback, this);
-	}
-
-private:
-	ros::NodeHandle nh;
-	image_transport::Publisher pub_;
-	image_transport::Subscriber sub_;
-	//image_transport::ImageTransport it(nh);
-};
-
-int main(int argc, char **argv) {
-
-	ros::init(argc, argv, "forwarder");
-
-	Forward ForwardObj;
-
-	ros::spin();
-
-	return 0;
+ImageConverter::ImageConverter(const ros::NodeHandle& nh,
+                               const ros::NodeHandle& private_nh)
+    : nh_(nh), private_nh_(private_nh) {
+  image_pub_ = private_nh_.advertise<sensor_msgs::Image>("image_mono8", 1);
+  image_sub_ =
+      nh_.subscribe("input_image", 1, &ImageConverter::image_callback, this);
 }
 
+void ImageConverter::image_callback(const sensor_msgs::ImageConstPtr& msg) {
+  cv_bridge::CvImagePtr cv_ptr;
+  try {
+    cv_ptr = cv_bridge::toCvCopy(msg, "mono8");
+  } catch (cv_bridge::Exception& e) {
+    ROS_ERROR("cv_bridge exception: %s", e.what());
+    return;
+  }
+
+  image_pub_.publish(cv_ptr->toImageMsg());
+}
+
+int main(int argc, char** argv) {
+  ros::init(argc, argv, "image_converter");
+
+  ros::NodeHandle nh, private_nh("~");
+
+  ImageConverter image_converter(nh, private_nh);
+
+  ros::spin();
+
+  return 0;
+}

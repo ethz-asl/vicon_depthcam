@@ -1,0 +1,36 @@
+<launch>
+
+  <arg name="sensor_name" default="kinect"/>
+  <arg name="target_name" default="checkerboard"/>
+
+  <arg name="marker_frame" default="world" />
+
+  <include file="$(find ros_vrpn_client)/launch/asl_vicon.launch">
+    <arg name="object_name" value="$(arg sensor_name)"/>
+  </include>
+
+  <include file="$(find ros_vrpn_client)/launch/asl_vicon.launch">
+    <arg name="object_name" value="$(arg target_name)"/>
+  </include>
+
+  <node pkg="vicon_depthcam_calib" name="image_converter" type="image_converter">
+  </node>
+    
+  <node pkg="checkerboard_detector" type="checkerboard_detector" name="detector_node">
+    <remap from="camera_info" to="/camera/ir/camera_info"/>
+    <remap from="image" to="/camera/ir/image_rect_conv"/>
+
+    <param name="display" type="int" value="1"/>
+    <param name="maxboard" type="int" value="1"/>
+    <param name="rect0_size_x" type="double" value="0.07"/>
+    <param name="rect0_size_y" type="double" value="0.07"/>
+    <param name="grid0_size_x" type="int" value="6"/>
+    <param name="grid0_size_y" type="int" value="7"/>
+    <param name="type0" type="string" value="6x7chessboard"/>
+  </node>
+
+  <node pkg="vicon_depthcam_calib" type="vicon_checker_calib" name="transform_calc_node">
+
+  </node>
+
+</launch>

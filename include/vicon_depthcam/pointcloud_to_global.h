@@ -20,9 +20,9 @@ class PCAligner {
   
   PCAligner(const ros::NodeHandle& nh, const ros::NodeHandle& private_nh);
 
-  void vicon_callback(const geometry_msgs::TransformStamped::ConstPtr& input);
+  void vicon_callback(const geometry_msgs::TransformStamped::ConstPtr& msg);
 
-  void pc_callback(const sensor_msgs::PointCloud2ConstPtr& input);
+  void pc_callback(const sensor_msgs::PointCloud2ConstPtr& msg_in);
 
  private:
 

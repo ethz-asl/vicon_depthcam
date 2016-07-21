@@ -1,0 +1,6 @@
+# transform from vicon-checkerboard-body to sensor-checkerboard-body
+T_VCB_CB:
+- [1.0, 0.0, 0.0, 0.0]
+- [0.0, 1.0, 0.0, 0.0]
+- [0.0, 0.0, 1.0, 0.0]
+- [0.0, 0.0, 0.0, 1.0]
