@@ -14,11 +14,15 @@
   </include>
 
   <node pkg="vicon_depthcam_calib" name="image_converter" type="image_converter">
+    <remap from="input_image" to="/camera/ir/image_rect_ir"/>
   </node>
+
+  <include file="$(find freenect_launch)/launch/freenect.launch">
+  </include>
     
   <node pkg="checkerboard_detector" type="checkerboard_detector" name="detector_node">
     <remap from="camera_info" to="/camera/ir/camera_info"/>
-    <remap from="image" to="/camera/ir/image_rect_conv"/>
+    <remap from="image" to="/image_converter/image_mono8"/>
 
     <param name="display" type="int" value="1"/>
     <param name="maxboard" type="int" value="1"/>

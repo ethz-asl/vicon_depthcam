@@ -11,12 +11,13 @@ ImageConverter::ImageConverter(const ros::NodeHandle& nh,
 void ImageConverter::image_callback(const sensor_msgs::ImageConstPtr& msg) {
   cv_bridge::CvImagePtr cv_ptr;
   try {
-    cv_ptr = cv_bridge::toCvCopy(msg, "mono8");
+    cv_ptr = cv_bridge::toCvCopy(msg,"mono16");
   } catch (cv_bridge::Exception& e) {
     ROS_ERROR("cv_bridge exception: %s", e.what());
     return;
   }
-
+  cv_ptr->image *= 255;
+  cv_ptr = cv_bridge::cvtColor(cv_ptr, "mono8");
   image_pub_.publish(cv_ptr->toImageMsg());
 }
 
