@@ -43,32 +43,19 @@ public:
 		return true;
 	}
 
-	void callback_checker_vicon(const geometry_msgs::TransformStamped::ConstPtr& input)
+	void checker_vicon_callback(const geometry_msgs::TransformStamped::ConstPtr& input)
 	{
-		checker_vicon_msgs.push_front(*input);
-		if(checker_vicon_msgs.size()>lib_size)
-		{
-			checker_vicon_msgs.pop_back();
-		}
-		//count1++;
-		//ROS_INFO("checker_vicon_msg number '%i'", count1);
+		transformMsgToKindr(input.transform, &T_W_VCB_);
 	}
 
-	void callback_sensor_vicon(const geometry_msgs::TransformStamped::ConstPtr& input)
+	void sensor_vicon_callback(const geometry_msgs::TransformStamped::ConstPtr& input)
 	{
-		sensor_vicon_msgs.push_front(*input);
-				if(sensor_vicon_msgs.size()>lib_size)
-				{
-					sensor_vicon_msgs.pop_back();
-				}
-
-		//count2++;
-		//ROS_INFO("sensor_vicon_msg number '%i'", count2);
+		transformMsgToKindr(input.transform, &T_W_VSB_);
 	}
 
-	void callback_checker_detection(const geometry_msgs::PoseStamped::ConstPtr& input)
+	void checker_camera_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
 	{
-		checker_detection_msg =*input;
+		poseMsgToKindr(input.transform, &T_SB_CB_);
 
 		calc_diff();
 
@@ -77,76 +64,18 @@ public:
 
 	void calc_diff()
 	{
-		checker_index=0;
-		sensor_index=0;
-		//search closest checker_vicon_msg
-		checker_index=nns(checker_detection_msg.header.stamp.toSec(),checker_vicon_msgs);
-		//search closest sensor_vicon_msg
-		sensor_index=nns(checker_detection_msg.header.stamp.toSec(),sensor_vicon_msgs);
 
-		//S=Sensor, C=Checkerboard, W=World D=Detected Point on Chessboard I=IR-Camera
-		kindr::minimal::QuatTransformation T_W_C;
-		kindr::minimal::QuatTransformation T_W_S;
-		kindr::minimal::QuatTransformation T_I_D;
-		kindr::minimal::QuatTransformation T_D_I;
-		kindr::minimal::QuatTransformation T_C_D;
-		kindr::minimal::QuatTransformation T_S_I;
-		kindr::minimal::QuatTransformation T_W_I;
-
-		T_C_D=kindr::minimal::QuatTransformation(detected_checker_rot,detected_checker_pos);
-
-		tf::transformMsgToKindr(checker_vicon_msgs[checker_index].transform, &T_W_C);
-		tf::transformMsgToKindr(sensor_vicon_msgs[sensor_index].transform, &T_W_S);
-		tf::poseMsgToKindr(checker_detection_msg.pose, &T_I_D);
-
-		T_D_I=T_I_D.inverse();
-		T_W_I=(T_W_C*T_C_D)*T_D_I;
-		T_S_I=T_W_S.inverse()*T_W_I;
+		T_VSB_SB =T_W_VSB_.inverse() * T_W_VCB_ * T_VCB_CB_ * T_SB_CB_.inverse()
 
 		count++;
 
-		//##################Calculate Average quaternion#################################
-		Eigen::Matrix<double, 3, 1> v;
-		Eigen::Matrix<double, 3, 1> v_sum;
+		//average
+		summed_rot_ += T_VSB_SB.getRotation();
+		summed_trans += T_VSB_SB.getTranslation();
 
-		if (count==1){
-			anchor=T_S_I;
-			ROS_INFO(" ");
-			ROS_INFO("ANCHOR SET");
-			ROS_INFO(" ");
-		} else{
+		mean_T_VSB_SB_ = QuatTransformation(summed_rot_, summed_trans/count);
 
-			v=box_minus(T_S_I,anchor);
-			v_sum+=v;
-			R_S_I_avg=box_plus(anchor,v_sum/count);
-			ROS_INFO_STREAM(R_S_I_avg.vector());
-		}
-
-		//#################################################################################
-
-		sum_sensor_ircamera=sum_sensor_ircamera+T_S_I.getTransformationMatrix();
-
-		//Print Euler and Transformation Matrix of current frame
-		//ROS_INFO("Euler Angles:");
-		//ROS_INFO_STREAM(T_S_I.getRotationMatrix().eulerAngles(2,0,2)*180/M_PI);
-		ROS_INFO("Transformation Matrix:");
-		ROS_INFO_STREAM(T_S_I.getTransformationMatrix());
-
-		sensor_ircamera=T_S_I.getTransformationMatrix();
-		euler_angles=T_S_I.getRotationMatrix().eulerAngles(2,0,2);
-		euler_angles*=180/M_PI;
-		ROS_INFO("Euler Angles:");
-		ROS_INFO_STREAM(euler_angles);
-
-		//store data for statistics
-		v_dx.push_back(sensor_ircamera(0,3)*1000);
-		v_dy.push_back(sensor_ircamera(1,3)*1000);
-		v_dz.push_back(sensor_ircamera(2,3)*1000);
-		v_rX.push_back(euler_angles(0));
-		v_rY.push_back(euler_angles(1));
-		v_rZ.push_back(euler_angles(2));
-
-
+		ROS_INFO_STREAM("Current Transformation: " << mean_T_VSB_SB_.getTransformationMatrix());
 
 		// tf broadcasts
 		tf::Transform world_checker;

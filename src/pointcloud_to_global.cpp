@@ -2,7 +2,7 @@
 
 void PCAligner::vicon_callback(
     const geometry_msgs::TransformStamped::ConstPtr& input) {
-  transformMsgToKindr(cmsg.transform, &T_W_VB_);
+  transformMsgToKindr(input.transform, &T_W_VB_);
 }
 
 void PCAligner::pc_callback(const sensor_msgs::PointCloud2ConstPtr& input) {
