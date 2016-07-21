@@ -23,7 +23,8 @@ void PCAligner::pc_callback(const sensor_msgs::PointCloud2ConstPtr& input) {
 }
 
 PCAligner::PCAligner(const ros::NodeHandle& nh,
-                     const ros::NodeHandle& private_nh) {
+                     const ros::NodeHandle& private_nh)
+    : nh_(nh), private_nh_(private_nh), {
   transformation = Stored_Transformation();
   pc_pub_ = private_nh_.advertise<sensor_msgs::PointCloud2>("pc_W", 1);
   pc_sub_ = nh_.subscribe("pc_SB", 1, &PCAligner::pc_callback, this);
@@ -42,7 +43,9 @@ PCAligner::PCAligner(const ros::NodeHandle& nh,
 int main(int argc, char** argv) {
   ros::init(argc, argv, "pointcloud_to_global");
 
-  PCAligner pc_aligner;
+  ros::NodeHandle nh, private_nh("~");
+
+  PCAligner pc_aligner(nh, private_nh);
 
   ros::spin();
 
