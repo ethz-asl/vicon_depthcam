@@ -1,0 +1,43 @@
+<launch>
+
+  <arg name="sensor_name" default="realsense_sp4"/>
+  <arg name="target_name" default="small_checkerboard"/>
+
+  <arg name="marker_frame" default="world" />
+
+  <include file="$(find ros_vrpn_client)/launch/asl_vicon.launch">
+    <arg name="object_name" value="$(arg sensor_name)"/>
+  </include>
+
+  <include file="$(find ros_vrpn_client)/launch/asl_vicon.launch">
+    <arg name="object_name" value="$(arg target_name)"/>
+  </include>
+
+  <node pkg="realsense_simple" type="realsense_simple" name="realsense_simple">
+    <param name="downsample_rate_factor" value="6"/>
+    <param name="enable_median_filter" value="true"/>
+    <param name="enable_min_max_filter" value="true"/>
+    <param name="min_max_filter_size" value="3"/>
+    <param name="min_max_filter_threshold" value="0.10"/>
+  </node>
+
+  <param name="display" value="1"/>
+  <param name="maxboard" value="1"/>
+  <param name="rect0_size_x" value="0.04971"/>
+  <param name="rect0_size_y" value="0.04971"/>
+  <param name="grid0_size_x" value="6"/>
+  <param name="grid0_size_y" value="7"/>
+    
+  <node pkg="checkerboard_detector" type="checkerboard_detector" name="detector_node">
+    <remap from="camera_info" to="/realsense_simple/color_camera_info"/>
+    <remap from="image" to="/realsense_simple/color_image"/>
+  </node>
+
+  <node pkg="vicon_depthcam_calib" type="vicon_checker_calib" name="transform_calc_node">
+    <rosparam command="load" file="$(find vicon_depthcam_calib)/cfg/calib.yaml" />
+    <remap from="checker_vicon_tform" to="/small_checkerboard/vrpn_client/estimated_transform"/>
+    <remap from="sensor_camera_pose" to="/objectdetection_pose"/>
+    <remap from="sensor_vicon_tform" to="/realsense_sp4/vrpn_client/estimated_transform"/>
+  </node>
+
+</launch>

@@ -2,12 +2,23 @@
 
 ViconCheckerCalib::ViconCheckerCalib(const ros::NodeHandle& nh,
                                      const ros::NodeHandle& private_nh)
-    : nh_(nh), private_nh_(private_nh), count_(0), summed_values_(TformMat::Zero()) {
+    : nh_(nh),
+      private_nh_(private_nh),
+      count_(0),
+      summed_values_(TformMat::Zero()) {
   XmlRpc::XmlRpcValue T_VCB_CB_xml;
   if (private_nh_.getParam("T_VCB_CB", T_VCB_CB_xml)) {
     kindr::minimal::xmlRpcToKindr(T_VCB_CB_xml, &T_VCB_CB_);
   } else {
     ROS_FATAL("Could not find T_VCB_CB parameter, exiting");
+    exit(EXIT_FAILURE);
+  }
+
+  XmlRpc::XmlRpcValue T_PB_SB_xml;
+  if (private_nh_.getParam("T_PB_SB", T_PB_SB_xml)) {
+    kindr::minimal::xmlRpcToKindr(T_PB_SB_xml, &T_PB_SB_);
+  } else {
+    ROS_FATAL("Could not find T_PB_SB parameter, exiting");
     exit(EXIT_FAILURE);
   }
 
@@ -42,21 +53,23 @@ void ViconCheckerCalib::checker_sensor_callback(
 }
 
 void ViconCheckerCalib::calc_transform_chain() {
-  kindr::minimal::QuatTransformation T_VSB_SB =
-      T_W_VSB_.inverse() * T_W_VCB_ * T_VCB_CB_ * T_SB_CB_.inverse();
+  kindr::minimal::QuatTransformation T_VSB_PB = T_W_VSB_.inverse() * T_W_VCB_ *
+                                                T_VCB_CB_ * T_SB_CB_.inverse() *
+                                                T_PB_SB_.inverse();
 
   count_++;
-  summed_values_ += T_VSB_SB.getTransformationMatrix();
+  summed_values_ += T_VSB_PB.getTransformationMatrix();
 
   kindr::minimal::RotationQuaternion temp_rot_quat =
       kindr::minimal::RotationQuaternion::constructAndRenormalize(
           summed_values_.topLeftCorner(3, 3) / count_);
 
-  kindr::minimal::QuatTransformation mean_T_VSB_SB(
+  kindr::minimal::QuatTransformation mean_T_VSB_PB(
       temp_rot_quat, summed_values_.topRightCorner(3, 1) / count_);
 
-  ROS_INFO_STREAM("Processed " << count_ << " images, current transformation: ");
-  ROS_INFO_STREAM(mean_T_VSB_SB.getTransformationMatrix());
+  ROS_INFO_STREAM("Processed " << count_
+                               << " images, current transformation: ");
+  ROS_INFO_STREAM(mean_T_VSB_PB.getTransformationMatrix());
 
   // tf broadcasts
   tf::Transform tf_transform;
@@ -70,9 +83,13 @@ void ViconCheckerCalib::calc_transform_chain() {
   tf_broadcaster_.sendTransform(
       tf::StampedTransform(tf_transform, ros::Time::now(), "sensor_body",
                            "image_checkerboard_body"));
-  tf::transformKindrToTF(T_VSB_SB, &tf_transform);
+  tf::transformKindrToTF(T_VSB_PB, &tf_transform);
+  tf_broadcaster_.sendTransform(
+      tf::StampedTransform(tf_transform, ros::Time::now(), "vicon_sensor_body",
+                           "sensor_pointcloud_body"));
+  tf::transformKindrToTF(T_PB_SB_, &tf_transform);
   tf_broadcaster_.sendTransform(tf::StampedTransform(
-      tf_transform, ros::Time::now(), "vicon_sensor_body", "sensor_body"));
+      tf_transform, ros::Time::now(), "sensor_pointcloud_body", "sensor_body"));
 }
 
 int main(int argc, char** argv) {

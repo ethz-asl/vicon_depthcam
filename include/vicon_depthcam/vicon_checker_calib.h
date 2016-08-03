@@ -49,4 +49,6 @@ class ViconCheckerCalib {
   kindr::minimal::QuatTransformation T_VCB_CB_;
   // sensor-body to sensor-checkerboard-body tform
   kindr::minimal::QuatTransformation T_SB_CB_;
+  // sensor-pointcloud-body to sensor-body tform
+  kindr::minimal::QuatTransformation T_PB_SB_;
 };
