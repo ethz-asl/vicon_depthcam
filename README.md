@@ -2,7 +2,7 @@
 
 Tools for using a depth-camera in combination with Vicon tracking.
 
-## This library has three ROS nodes
+### This library has three ROS nodes
 
 1) vicon_checker_calib - This node uses a checkerboard with additional Vicon markers to find the transformation between a depth camera output and the coordinate frame given by its Vicon markers.
 
