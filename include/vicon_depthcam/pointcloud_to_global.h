@@ -34,10 +34,10 @@ class PCAligner {
   ros::Subscriber pc_sub_;
   ros::Subscriber vicon_sub_;
 
-  // world to vicon-body
-  kindr::minimal::QuatTransformation T_W_VB_;
-  // vicon-body to sensor body
-  kindr::minimal::QuatTransformation T_VB_SB_;
+  // world to vicon-sensor-body
+  kindr::minimal::QuatTransformation T_W_VSB_;
+  // vicon-sensor-body to pointcloud-body
+  kindr::minimal::QuatTransformation T_VSB_PB_;
 
   tf::TransformBroadcaster tf_broadcaster_;
 };
