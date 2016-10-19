@@ -1,6 +1,6 @@
 # vicon_depthcam
 
-Tools for using a depth-camera in combination with Vicon tracking.
+Small tool for calibrating the offset between a depth camera and Vicon markers. Uses a target constructed of a chessboard with Vicon markers placed in known locations.
 
 ### This library has three ROS nodes
 
